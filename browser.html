@@ -673,6 +673,7 @@
         }
 
         const runcommandByPlayer=(playername,command)=>{
+            console.log(playername,command);
             let writerIndex=1;
             const buffer=new Uint8Array(500);
             buffer[0]=6;
@@ -865,8 +866,8 @@
                         <button class="caution" onclick="sendrawRequest(`#kick ${selectedPlayerName}`)">Kick</button>
                         <button class="caution" onclick="sendrawRequest(`#mute ${selectedPlayerName}`)">ミュート</button>
 
-                        <textarea name="" id="" cols="40" rows="1" class="commandinput" placeholder="このプレイヤーとしてコマンドを実行"></textarea>
-                        <button class="submit inputsubmit caution" onclick="runcommandByPlayer(selectedPlayerName,document.querySelector('.commandinpupt').value)"> <i class="fa-solid fa-paper-plane"></i>? </button>
+                        <textarea name="" id="" cols="40" rows="1" class="commandinput" placeholder="このプレイヤーとしてコマンドを実行" onkeypress="if(event.key=='Enter'){document.querySelector('.control .inputsubmit').click(); event.preventDefault();}"></textarea>
+                        <button class="submit inputsubmit caution" onclick="runcommandByPlayer(selectedPlayerName,document.querySelector('.commandinput').value); document.querySelector('.commandinput').value='';"> <i class="fa-solid fa-paper-plane"></i>? </button>
 
                         <div class="inventorymanager">
                             <div class="column">
