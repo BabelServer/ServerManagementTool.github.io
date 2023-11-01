@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BabelServer Instance Management</title>
+
+    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+
+    <script src="./browser/scripts/menuconstructor.js"></script>
+    <script src="./browser/scripts/events.js"></script>
+    <script src="./ESON.js"></script>
+
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+
+            overflow: hidden;
+
+            font-family: "游明朝";
+
+            --color-selection: rgb(85, 186, 86);
+            --color-back: rgb(232, 232, 232);
+            --color-header-deep: rgb(80, 205, 140);
+            --color-header: rgb(79, 187, 131);
+            --color-standard: rgb(227, 242, 234);
+            --color-standard-accent: rgb(212, 225, 218);
+            --color-powerful: #ce3737;
+
+            --color-danger: rgb(185, 42, 42);
+        }
+        html{
+            background-color: var(--color-back);
+            overflow-y: scroll;
+        }
+
+        .title{
+            text-align: center;
+            background-color: var(--color-header-deep);
+            max-height: 24px;
+        }
+
+        button{
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        textarea{
+            white-space: nowrap;
+        }
+
+
+        header{
+            display: flex;
+            background-color: var(--color-header);
+
+            height: 32px;
+        }
+
+        header .otherusers{
+            margin: 0 0;
+            width: 7em;
+            font-size: 12px;
+            height: 50%;
+        }
+        header .otherusers .userlist{
+            width: auto;
+        }
+        header .otherusers .userlist .userlist_element{
+            height: 1.5em;
+            white-space: nowrap;
+        }
+
+        header .userlogin{
+            margin: 0 0;
+            width: 3em;
+
+            position: absolute;
+            left: calc(100% - 3em);
+        }
+
+
+        .maintitle{
+            position: absolute;
+            margin-left: calc(50% - 7em); /*I don't know somehow but center is L=textlength; 50%-L/2/2; */
+
+            font-size: 14px;
+            text-align: center;
+
+            display: flex;
+            flex-direction: column;
+            line-height: 14px;
+        }
+
+        .drp{
+            /*margin-left: 40px; 邪魔*/
+            font-size: 20px;
+
+            text-align: center;
+
+            width: 6em;
+            background: var(--color-header);
+        }
+        .drp:hover{
+            background-color: var(--color-selection) !important;
+        }
+
+        .list{
+            display: none;
+            position: absolute;
+
+            justify-content: center;
+            align-items: center;
+            
+            width: calc(10em);
+        }
+        .drp:hover .list{
+            display: block !important;
+        }
+
+        .list_element{
+            z-index: 100;
+            height: 30px;
+            min-width: 100%;
+            transition: all 0.3;
+            position: relative;
+            /* padding-right: 4em; */
+
+            margin-left: auto;
+            margin-right: auto;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #252829;
+            background-color: var(--color-selection);
+            text-decoration: none;
+        }
+        .list_element a{
+            display: block;
+            
+            overflow: hidden;
+            text-overflow: ellipsis; /* if text is overflowed, shows ... instaed  */
+            white-space: nowrap;  /* to use ellipsis */
+
+            margin-left: auto;
+            margin-right: auto;
+
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+
+        .maincontroller{
+            display:flex;
+        }
+
+        .lowlevel{
+            position: absolute;
+            width: 15%;
+            height: 60%;
+            background-color: var(--color-standard);
+            
+            border: solid rgb(144, 168, 148) 2px;
+            border-radius: 10px;
+            /* box-shadow: inset -00px 0px 20px -10px black; */
+        }
+        .lowlevel .power{
+            height: 30px;
+        }
+        .lowlevel .power p{
+            text-align: center;
+            background-color: var(--color-header-deep);
+            border-radius: 8px;
+        }
+
+        .lowlevel .controller{
+            text-align: center;
+            height: 30px;
+        }
+
+
+        .danger{
+            color: var(--color-danger);
+
+            border: solid red 2px;
+            border-radius: 3px
+        }
+        .danger:hover{
+            background-color: red;
+            color: yellow;
+        }
+        
+        .caution{
+            color: rgb(74, 97, 28);
+            border: solid red 1px;
+            border-radius: 3px
+        }
+        .caution:hover{
+            background-color: rgb(255, 179, 179);
+        }
+
+
+        .lowlevel .logwrapper{
+            background-color: var(--color-standard-accent);
+            width: 100%;
+            height: calc(100% - 30px - 30px);
+
+            border-radius: 10px;
+
+            display: flex;
+            flex-direction: column; /*Bottom To Top*/
+        }
+        .logwrapper li{
+            font-size: 15px;
+            line-height: 15px;
+        }
+
+
+        .savefile{
+            position: absolute;
+            top: 65%;
+            width: 50%;
+            height: 34%;
+            background-color: var(--color-standard);
+            
+            border: solid rgb(144, 168, 148) 2px;
+            border-radius: 10px;
+            /* box-shadow: inset -00px 0px 20px -10px black; */
+        }
+        .savefile .main{
+            display: flex;
+        }
+
+        .savefile .inactive{
+            background-color: grey;
+            cursor: not-allowed;
+        }
+        
+        .savefile .filebrowser{
+            position: absolute;
+            width: 50%;
+            height: calc(100% - 24px);
+            background-color: var(--color-standard-accent);
+            border-radius: 10px;
+
+            overflow-y: scroll;
+        }
+        .savefile .filebrowser li{
+            font-size: 15px;
+        }
+        .savefile .filebrowser .selected{
+            background-color: var(--color-selection);
+            color: white;
+        }
+
+        .savefile .controller{
+            position: absolute;
+            width: 100%;
+            left: 50%;
+        }
+        .savefile .buttons{
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 1000px;
+        }
+        .savefile .properties{
+            position: relative;
+            margin-top: 100px;
+            margin-left: 10px;
+        }
+
+
+        .playercontroller{
+            position: absolute;
+            left: 50.5%;
+            width: 49.5%;
+            height: calc(100% - 40px);
+            border: solid rgb(144, 168, 148) 2px;
+            border-radius: 10px;
+        }
+        
+        .playerlist{
+            display: flex;
+            height: 65%;
+        }
+        .playerbrowser{
+            position: relative;
+            width: 50%;
+            height: 100%;
+            background-color: var(--color-standard-accent);
+        }
+        .playerlist .control{
+            position: relative;
+            margin-left: 10px;
+        }
+        .playerlist .control .opbuttons{
+            /* width: 450px; */
+            width: 90%;
+            height: 50%;
+            /* background-color: ; */
+            margin-top: 5px;
+            border: solid 2px var(--color-powerful);
+            border-radius: 10px;
+            /* background-color: ; */
+        }
+        .playerlist .control .opbuttons .minititle{
+            text-align: center;
+            margin-top: -5px;
+        }
+        .playerlist .control .opbuttons button{
+            margin-left: 10px;
+        }
+
+        .playerlist .playerbrowser{
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+        .playerlist .playerbrowser::-webkit-scrollbar{
+            display: none;
+        }
+        .playerlist .playerbrowser .playeritem{
+            margin-left: 0.8%;
+            margin-top: 5px;
+            margin-bottom: 10px;
+
+            width: 97%;
+            height: 100px;
+            background-color: var(--color-standard);
+            border-radius: 15px;
+        }
+        .playerlist .playerbrowser .playeritem .name{
+            margin-left: 8px;
+
+            font-size: 25px;
+        }
+        .playerlist .playerbrowser .playeritem .healthwrapper{
+            display: flex;
+        }
+        .playerlist .playerbrowser .playeritem .healthwrapper li{
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+
+        .playerlist .commandinput{
+            resize: none;
+            border: none;
+            outline: none;
+
+            position: relative;
+            margin-top: 10px;
+            margin-left: 10px;
+
+            background-color: var(--color-standard-accent);
+        }
+
+        .playerlist .control .inputsubmit{
+            position: relative;
+            top: -5px;
+            left: -10px;
+        }
+
+        .inventorymanager{
+            margin-top: 20px;
+        }
+        .inventorymanager .column{
+            display: flex;
+            margin-top: 12px;
+        }
+        .inventorymanager .row{
+            margin-left: 2px;
+            margin-right: 5px;
+        }
+
+
+        .selected{
+            border: solid 4px var(--color-selection);
+        }
+        
+        .submit{
+            border-radius: 3px;
+            border: solid 1px black;
+        }
+        .submit:active{
+            background-color: whitesmoke;
+        }
+
+
+        .playerlist .normalinformation{
+            position: relative;
+            margin-top: 1%;
+            margin-left: 10px;
+        }
+
+
+        .newjoin{
+            background-color: greenyellow;
+        }
+
+
+        .maindisplay{
+            background-color: var(--color-standard);
+            border: solid 1px red;
+
+            position: fixed;
+            top: 50%;
+            left: 50%;
+        }
+
+
+        .notadmindisplay{
+            text-align: center;
+            font-size: 30px;
+        }
+        .passwordinput{
+            white-space: nowrap;
+            resize: none;
+            background-color: var(--color-standard-accent);
+        }
+    </style>
+    <script>
+        let logcache=[];
+        let sessionUserList=[];
+        let e;
+        let lastWsResponse;
+        let ptrWsClient;
+
+        let isAdmin=false;
+        let permissionLevel=0;
+
+        let selectedPlayerName='';
+        let selectedSavefileName='';
+
+        let downloading=false;
+
+        
+        document.addEventListener('DOMContentLoaded',()=>{
+            adminMenu(true);
+
+            const wsCLient=new WebSocket('wss://p5359062-ipxg23901hodogaya.kanagawa.ocn.ne.jp:44777');
+            ptrWsClient=wsCLient
+    
+            wsCLient.onopen=()=>{
+                const onlineStatusDisplay=document.querySelector('.onlinestatusdisplay');
+
+                onlineStatusDisplay.innerHTML='<a> <span style="color: greenyellow;">&#xf111;</span> 接続済み</a>';
+
+
+                //retr playerlist
+                wsCLient.send(Uint8Array.from([0]));
+            }
+
+            wsCLient.onmessage=(msg)=>{
+                e=msg;
+
+
+                if(typeof msg.data!='string'){// raw binary data. try to download.
+                    const downloader=document.createElement('a');
+                    downloader.href=window.URL.createObjectURL(msg.data);
+                    downloader.download=selectedSavefileName;
+
+                    downloader.click();
+
+
+                    const downloadbutton=document.querySelector('#downloadbutton');
+                    downloadbutton.classList.remove('inactive');
+                    
+                    downloading=false;
+                    return;
+                }
+
+
+                let data;
+                try{
+                    data=ESON.strNumToNum(ESON.parse(msg.data.substring(1,msg.data.length)/*clone*/));
+                }catch{return};
+
+
+                const responseType=Number(msg.data[0]);
+
+                switch(responseType){
+                    case 0:{
+                        const playerBrowser=document.querySelector('.playerbrowser');
+
+                        playerBrowser.innerHTML='';
+                        let i=0;
+                        for(const player of data){
+                            const playerItemElement=document.createElement('div');
+                            playerItemElement.classList.add('playeritem');
+
+                            const elementIndex=i++;
+                            playerItemElement.onmousedown=()=>changePlayerEditorSelection(elementIndex);
+
+
+                            const playernameElement=document.createElement('p');
+                            playernameElement.classList.add('name');
+
+                            playernameElement.textContent=player.name;
+
+                            const healthWrapper=document.createElement('ul');
+                            healthWrapper.classList.add('healthwrapper');
+
+                            for(let i=0;i<Math.round(player.health/2);i++){
+                                const healthItem=document.createElement('li');
+                                healthItem.innerHTML='&#xf111;';
+
+                                healthWrapper.appendChild(healthItem);
+                            }
+
+                            playerItemElement.appendChild(playernameElement);
+                            playerItemElement.appendChild(healthWrapper);
+                            playerBrowser.appendChild(playerItemElement);
+                        }
+
+
+                        break;
+                    }
+                    case 1:{
+                        permissionLevel=data.permissionLevel;
+                        if(permissionLevel>=5) isAdmin=true;
+
+                        adminMenu();
+                        break;
+                    }
+                    case 2:{
+                        const filebrowser=document.querySelector('.filebrowser');
+
+                        filebrowser.innerHTML='';
+                        data.backupfiles.forEach(backupName=>{
+                            const fileElement=document.createElement('li');
+
+                            fileElement.textContent=backupName;
+                        
+                            fileElement.onclick=ev=>{
+                                Array.from(filebrowser.children).forEach(fileElement=> fileElement.classList.remove('selected') );
+
+                                fileElement.classList.add('selected');
+
+                                selectedSavefileName=fileElement.textContent;
+                            }
+
+                            
+                            filebrowser.appendChild(fileElement);
+                        })
+
+
+                        break;
+                    }
+                    case 4:{
+                        if(data.type=='add') joinUser(data.username);
+                            else leaveUser(data.username);
+
+
+                        break;
+                    }
+
+                    case 5:{ //you are (or not) admin
+                        if(!data.admin) return;
+
+                        isAdmin=true;
+                        permissionLevel=5;
+
+                        adminMenu();
+                    }
+                }
+            }
+
+
+            log('フォームがロードされました');
+        })
+
+
+        const tickLogDisplay=()=>{
+            const logwrapper=document.getElementById('logwrapper');
+ 
+            for(const log of logcache){
+                const logItem=document.createElement('li');
+                logItem.textContent=log;
+ 
+                logwrapper.appendChild(logItem);
+            }
+        }
+
+        /**
+         * @param {string} log
+        */
+        const appendLog=log=>{
+            logcache.push(log);
+
+            tickLogDisplay();
+        }
+        /**@param {string} text*/
+        const log=text=>{
+            appendLog('[LOG] '+text)
+        }
+        /**@param {string} text*/
+        const info=text=>{
+            appendLog('[INFO] '+text)
+        }
+        /**@param {string} text*/
+        const warn=text=>{
+            appendLog('[WARN] '+text)
+        }
+
+
+        const changePlayerEditorSelection=id=>{
+            const playerList=document.querySelectorAll('.playerlist .playerbrowser .playeritem');
+
+            playerList.forEach(playerItem=>{
+                playerItem.classList.remove('selected');
+            })
+            playerList[id].classList.add('selected');
+
+            selectedPlayerName=playerList[id].children.item(0).textContent;
+        }
+
+
+        const joinUser=(username)=>{
+            if(sessionUserList.includes(username)) return;
+            sessionUserList.splice( sessionUserList.indexOf(username) );
+
+            const userList=document.querySelector('.userlist');
+
+            const userElement=document.createElement('li');
+            userElement.classList.add(...['list_element','userlist_element','newjoin']);
+
+            userElement.innerHTML=`<span style="right: calc(+50% - 25px);font-size:20px;overflow:visible">+</span>${username}`;
+
+
+            userList.appendChild(userElement);
+
+
+            const userlistPanrent=userList.parentElement;
+
+            userlistPanrent.style.backgroundColor='var(--color-selection)';
+            userList.style.display='block';
+            setTimeout(() => {
+                userList.style.display='none';
+                userlistPanrent.style.backgroundColor='var(--color-header)';
+
+                userElement.classList.remove('newjoin');
+                userElement.innerHTML=userElement.innerHTML.substring(userElement.innerHTML.length - username.length);
+            }, 1250);
+        }
+        const leaveUser=(username)=>{
+            const userList=document.querySelector('.userlist');
+
+            Array.from(userList.children).find(child=>child.textContent==username).remove();
+        }
+
+
+        const requestDownloadSavefile=()=>{
+            if(downloading) return;
+
+            const sendingBuffer=new Uint8Array(100);
+            sendingBuffer[0]=3;// 3: downloadsavefile
+            
+            const filenameBinary=new TextEncoder().encode(selectedSavefileName);
+            sendingBuffer[1]=filenameBinary.byteLength;
+            let writerIndex=2;
+            filenameBinary.forEach(nameByte=>{
+                sendingBuffer[writerIndex++]=nameByte;
+            })
+
+
+            ptrWsClient.send(sendingBuffer.slice(0,writerIndex));
+
+            const downloadButton=document.querySelector('#downloadbutton');
+            downloadButton.classList.add('inactive');
+        }
+
+        const runcommandByPlayer=(playername,command)=>{
+            let writerIndex=1;
+            const buffer=new Uint8Array(500);
+            buffer[0]=6;
+
+            const commandBinary=new TextEncoder().encode(command);
+            buffer[writerIndex++]=commandBinary.byteLength;
+            commandBinary.forEach(commandByte=>{
+                buffer[writerIndex++]=commandByte;
+            })
+
+            const playernameBinary=new TextEncoder().encode(playername);
+            buffer[writerIndex++]=playernameBinary.byteLength;
+            playernameBinary.forEach(playernameByte=>{
+                buffer[writerIndex++]=playernameByte;
+            })
+
+
+            ptrWsClient.send(buffer.slice(0,writerIndex));
+        }
+
+        const sendrawRequest=message=>{
+            let writerIndex=0;
+            const buffer=new Uint8Array(message.length+2);
+            buffer[writerIndex++]=7;
+            
+            const messageBinary=new TextEncoder().encode(message);
+            buffer[writerIndex++]=messageBinary.byteLength;
+            messageBinary.forEach(messageByte=>{
+                buffer[writerIndex++]=messageByte;
+            })
+
+
+            ptrWsClient.send(buffer);
+        }
+
+
+        const adminMenu=(activate=isAdmin)=>{
+            const displayOption=activate?'block':'none';
+
+            const opbuttons=document.querySelector('.maincontroller');
+            opbuttons.style.display=displayOption;
+
+            const drpMenu=document.querySelectorAll('.headerinner');
+            drpMenu.forEach(menu=>{if(!menu.classList.contains('otherusers')) menu.style.display=displayOption});
+
+
+            const yournotadminDisplay=document.querySelector('.notadmindisplay');
+            yournotadminDisplay.style.display=displayOption=='none'?'block':'none';
+        }
+
+        const loginWithPassword=password=>{
+            const dataBuffer=new Uint8Array(1024);
+            let writerIndex=1;
+            dataBuffer[0]=50 //50: amIadmin?
+            
+            const binaryPassword=new TextEncoder().encode(password);
+            dataBuffer[writerIndex++]=binaryPassword.byteLength;
+            binaryPassword.forEach(passwordByte=>{
+                dataBuffer[writerIndex++]=passwordByte;
+            });
+
+
+            ptrWsClient.send(dataBuffer.buffer.slice(0,writerIndex));
+
+            return;
+            const token1=Math.round(Math.random()*255);
+            const token2=Math.round(Math.random()*255);
+            const token3=Math.round(Math.random()*255);
+            const token4=Math.round(Math.random()*255);
+            const token5=Math.round(Math.random()*255);
+            dataBuffer[writerIndex++]=token1;
+            dataBuffer[writerIndex++]=token2;
+            dataBuffer[writerIndex++]=token3;
+            dataBuffer[writerIndex++]=token4;
+            dataBuffer[writerIndex++]=token5;
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <div class="headerinner drp">
+            サーバー接続
+            <ul class="filelist list">
+                <li class="list_element"> <a>再接続</a> </li>
+                <li class="list_element"> <a>情報</a> </li>
+            </ul>
+        </div>
+
+        <div class="headerinner drp">
+            ボット
+            <ul class="botlist list">
+                <li class="list_element"> <a>再起動</a> </li>
+                <li class="list_element danger"> <a>ディープリセット</a> </li>
+            </ul>
+        </div>
+
+
+        <div class="headerinner drp otherusers">
+            <p>ほかのユーザー</p>
+
+            <ul class="userlist list">
+                <!-- <li class="list_element userlist_element">NULL</li> -->
+            </ul>
+        </div>
+
+
+        <div class="maintitle">
+            <a>BabelServer Management Panel</a>
+            <div class="onlinestatusdisplay"> <a> <span style="color: red;">&#xf111;</span> 到達不能</a> </div>
+        </div>
+
+
+        <div class="headerinner drp userlogin">
+            <p>USR</p>
+        </div>
+    </header>
+    <div class="maincontroller">
+        <div class="lowlevel">
+            <div class="power">
+                <p>サーバーログ</a>
+            </div>
+            <div class="controller">
+                <button class="danger">強制停止</button>
+                <button>STOP</button>
+                <button>START</button>
+            </div>
+            <ul class="logwrapper" id="logwrapper">
+
+            </ul>
+        </div>
+        <div class="savefile">
+            <div class="titlewrap">
+                <p class="title">セーブデータ</p>
+            </div>
+
+            <div class="main">
+                <ul class="filebrowser">
+                </ul>
+
+                <div class="controller">
+                    <div class="buttons">
+                        <button onclick="requestDownloadSavefile();" id="downloadbutton">ダウンロード</button>
+                        <button onclick="ptrWsClient.send(Uint8Array.from([2]));">更新</button>
+                    </div>
+                    <div class="properties">
+                        <p>サイズ: <span>404</span></p>
+                        <p>作成日時: <span>404</span></p>
+                        <p>読み込み不可: 404</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="playercontroller">
+            <p class="title">プレイヤーエディター</p>
+            <div class="playerlist">
+                <ul class="playerbrowser">
+                    <li class="playeritem selected" onmousedown="changePlayerEditorSelection(0);">
+                        <p class="name">BabelServer</p>
+                        <ul class="healthwrapper">
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                        </ul>
+                    </li>
+                    <li class="playeritem" onmousedown="changePlayerEditorSelection(1);"">
+                        <p class="name">aoba0713</p>
+                        <ul class="healthwrapper">
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                            <li>&#xf111;</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="control">
+                    <div class="opbuttons">
+                        <p class="minititle">管理者権限</p>
+                        <button class="caution" onclick="sendrawRequest(`#ban ${selectedPlayerName}`)">Ban</button>
+                        <button class="caution" onclick="sendrawRequest(`#kick ${selectedPlayerName}`)">Kick</button>
+                        <button class="caution" onclick="sendrawRequest(`#mute ${selectedPlayerName}`)">ミュート</button>
+
+                        <textarea name="" id="" cols="40" rows="1" class="commandinput" placeholder="このプレイヤーとしてコマンドを実行"></textarea>
+                        <button class="submit inputsubmit caution" onclick="runcommandByPlayer(selectedPlayerName,document.querySelector('.commandinpupt').value)"> <i class="fa-solid fa-paper-plane"></i>? </button>
+
+                        <div class="inventorymanager">
+                            <div class="column">
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                                <div class="row">
+                                    <p>Hello</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="normalinformation">
+                        <p>データサイズ: 404</p>
+                        <p>管理者？: 404</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notadmindisplay">
+        <p>あなたは管理者ではありません。<br>もしくは: パスワードでログイン</p>
+        <div class="passwordinputwrapper">
+            <textarea name="" id="" cols="40" rows="1" class="passwordinput" placeholder="Password" onkeypress="if(event.key=='Enter') {loginWithPassword(this.value); this.value=''; event.preventDefault()};"></textarea>
+        </div>
+    </div>
+</body>
+</html>
